@@ -10,13 +10,24 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as Google from 'expo-auth-session/providers/google';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 
-// Configure Google Sign-In
-GoogleSignin.configure({
-    webClientId: '399403302252-YOUR_WEB_CLIENT_ID.apps.googleusercontent.com', // Replace with your web client ID from Firebase Console
-    offlineAccess: true,
-});
+// Complete auth session for web browser
+WebBrowser.maybeCompleteAuthSession();
+
+// Google OAuth Client IDs
+// You need to create an OAuth 2.0 Client ID for "Web application" in Google Cloud Console
+// and add https://auth.expo.io/@your-username/your-app-slug as authorized redirect URI
+export const GOOGLE_CONFIG = {
+    // For Expo Go development, use the web client ID
+    expoClientId: '399403302252-ngcrsegtatn47oicbc2ri8ji4i0p05tl.apps.googleusercontent.com',
+    // For standalone Android app (after building)
+    androidClientId: '399403302252-ngcrsegtatn47oicbc2ri8ji4i0p05tl.apps.googleusercontent.com',
+    // Web client ID (same as expoClientId for Firebase)
+    webClientId: '399403302252-ngcrsegtatn47oicbc2ri8ji4i0p05tl.apps.googleusercontent.com',
+};
 
 export interface UserProfile {
     uid: string;
@@ -31,17 +42,9 @@ export interface UserProfile {
     hasCompletedOnboarding?: boolean;
 }
 
-// Sign in with Google
-export const signInWithGoogle = async (): Promise<User> => {
+// Sign in with Google using ID token (called from component with expo-auth-session)
+export const signInWithGoogleCredential = async (idToken: string): Promise<User> => {
     try {
-        await GoogleSignin.hasPlayServices();
-        const userInfo = await GoogleSignin.signIn();
-        
-        const idToken = userInfo.data?.idToken;
-        if (!idToken) {
-            throw new Error('No ID token present');
-        }
-        
         const credential = GoogleAuthProvider.credential(idToken);
         const result = await signInWithCredential(auth, credential);
         
@@ -91,14 +94,6 @@ export const signUpWithEmail = async (
 // Sign out
 export const signOut = async (): Promise<void> => {
     try {
-        // Sign out from Google if signed in
-        try {
-            await GoogleSignin.signOut();
-        } catch (googleError) {
-            // Google sign out may fail if user wasn't signed in with Google
-            console.log('Google sign out skipped:', googleError);
-        }
-        
         await firebaseSignOut(auth);
     } catch (error) {
         console.error('Sign Out Error:', error);
@@ -162,3 +157,6 @@ export const completeOnboarding = async (uid: string): Promise<void> => {
 export const subscribeToAuthState = (callback: (user: User | null) => void) => {
     return onAuthStateChanged(auth, callback);
 };
+
+// Export Google hook for use in components
+export { Google };
