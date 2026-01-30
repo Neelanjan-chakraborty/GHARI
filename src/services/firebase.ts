@@ -2,14 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
-// Replace with your actual Firebase config from Firebase Console
+// Config extracted from your google-services.json
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "ghari-app.firebaseapp.com",
-    projectId: "ghari-app",
-    storageBucket: "ghari-app.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBuAUOWo-ZvyowiSf1Uh2X2YBOrKQSX5HI",
+    authDomain: "ghari-5b9bb.firebaseapp.com",
+    projectId: "ghari-5b9bb",
+    storageBucket: "ghari-5b9bb.firebasestorage.app",
+    messagingSenderId: "399403302252",
+    appId: "1:399403302252:android:1832486fca8058f8e6c749"
 };
 
 const app = initializeApp(firebaseConfig);

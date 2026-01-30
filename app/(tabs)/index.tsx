@@ -1,27 +1,34 @@
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../src/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Sectograph from '../../src/components/sectograph/Sectograph';
+
+const DUMMY_TASKS = [
+    { id: '1', title: 'Deep Work', startTime: '09:00', endTime: '12:00', color: COLORS.primary },
+    { id: '2', title: 'Lunch Break', startTime: '12:00', endTime: '13:00', color: COLORS.secondary },
+    { id: '3', title: 'Gym', startTime: '17:00', endTime: '18:30', color: COLORS.accent },
+    { id: '4', title: 'Study', startTime: '20:00', endTime: '22:00', color: COLORS.status.error },
+];
 
 export default function HomeScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <Text style={styles.greeting}>Good morning, Ghari</Text>
-                    <Text style={styles.subtitle}>You have 4 tasks scheduled for today</Text>
+                    <Text style={styles.greeting}>Good Evening, Neel</Text>
+                    <Text style={styles.subtitle}>You have {DUMMY_TASKS.length} tasks scheduled for today</Text>
                 </View>
 
-                <View style={styles.sectographPlaceholder}>
-                    <Text style={styles.placeholderText}>Sectograph Coming Soon</Text>
-                </View>
+                <Sectograph tasks={DUMMY_TASKS} />
 
                 <View style={styles.taskList}>
                     <Text style={styles.sectionTitle}>Today's Schedule</Text>
-                    {/* We will add task cards here */}
-                    <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Morning Focus</Text>
-                        <Text style={styles.cardTime}>09:00 - 11:00</Text>
-                    </View>
+                    {DUMMY_TASKS.map(task => (
+                        <View key={task.id} style={[styles.card, { borderLeftColor: task.color }]}>
+                            <Text style={styles.cardTitle}>{task.title}</Text>
+                            <Text style={styles.cardTime}>{task.startTime} - {task.endTime}</Text>
+                        </View>
+                    ))}
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -49,21 +56,6 @@ const styles = StyleSheet.create({
         color: COLORS.text.secondary,
         marginTop: 4,
     },
-    sectographPlaceholder: {
-        width: '100%',
-        aspectRatio: 1,
-        backgroundColor: COLORS.surface,
-        borderRadius: 200,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: COLORS.border,
-        marginBottom: SPACING.xl,
-    },
-    placeholderText: {
-        color: COLORS.text.hint,
-        fontSize: TYPOGRAPHY.size.md,
-    },
     sectionTitle: {
         fontSize: TYPOGRAPHY.size.lg,
         fontWeight: '600',
@@ -84,6 +76,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.05,
         shadowRadius: 10,
         elevation: 2,
+        marginBottom: SPACING.md,
     },
     cardTitle: {
         fontSize: TYPOGRAPHY.size.md,
