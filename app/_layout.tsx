@@ -35,7 +35,7 @@ function useProtectedRoute() {
     useEffect(() => {
         if (!navigationState?.key || loading || !initialized) return;
 
-        const inAuthGroup = segments[0] === '(auth)';
+        const inAuthGroup = segments[0] === '(auth)' || segments[0] === 'login' || segments[0] === 'signup';
         const inOnboarding = segments[0] === 'onboarding';
         const inTabs = segments[0] === '(tabs)';
 

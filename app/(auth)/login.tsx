@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,7 +14,7 @@ import { router } from 'expo-router';
 import { Mail, Lock, ArrowLeft } from 'lucide-react-native';
 import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../src/constants/theme';
 import { Button, TextInput } from '../../src/components/common';
-import { signInWithGoogle, signInWithEmail } from '../../src/services/auth';
+import { signInWithGoogleCredential, signInWithEmail, Google, GOOGLE_CONFIG } from '../../src/services/auth';
 import { useAuthStore } from '../../src/store/useAuthStore';
 
 export default function LoginScreen() {
@@ -25,6 +25,37 @@ export default function LoginScreen() {
     const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
     const { fetchUserProfile } = useAuthStore();
+
+    // Google Auth Session - using expoClientId for Expo Go
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        expoClientId: GOOGLE_CONFIG.expoClientId,
+        androidClientId: GOOGLE_CONFIG.androidClientId,
+        webClientId: GOOGLE_CONFIG.webClientId,
+    });
+
+    // Handle Google sign-in response
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            handleGoogleSignIn(id_token);
+        } else if (response?.type === 'error') {
+            setGoogleLoading(false);
+            Alert.alert('Sign In Failed', 'Unable to sign in with Google. Please try again.');
+        }
+    }, [response]);
+
+    const handleGoogleSignIn = async (idToken: string) => {
+        try {
+            const user = await signInWithGoogleCredential(idToken);
+            await fetchUserProfile(user.uid);
+            // Navigation will be handled by auth state listener
+        } catch (error: any) {
+            console.error('Google Sign-In Error:', error);
+            Alert.alert('Sign In Failed', 'Unable to sign in with Google. Please try again.');
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
 
     const validateForm = () => {
         const newErrors: { email?: string; password?: string } = {};
@@ -72,21 +103,7 @@ export default function LoginScreen() {
 
     const handleGoogleLogin = async () => {
         setGoogleLoading(true);
-        try {
-            const user = await signInWithGoogle();
-            await fetchUserProfile(user.uid);
-            // Navigation will be handled by auth state listener
-        } catch (error: any) {
-            console.error('Google Sign-In Error:', error);
-            if (error.code !== 'SIGN_IN_CANCELLED') {
-                Alert.alert(
-                    'Sign In Failed',
-                    'Unable to sign in with Google. Please try again.'
-                );
-            }
-        } finally {
-            setGoogleLoading(false);
-        }
+        promptAsync();
     };
 
     return (
