@@ -1,0 +1,285 @@
+import React, { useState } from 'react';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    Alert,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { Mail, Lock, ArrowLeft } from 'lucide-react-native';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY } from '../../src/constants/theme';
+import { Button, TextInput } from '../../src/components/common';
+import { signInWithGoogle, signInWithEmail } from '../../src/services/auth';
+import { useAuthStore } from '../../src/store/useAuthStore';
+
+export default function LoginScreen() {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+    const { fetchUserProfile } = useAuthStore();
+
+    const validateForm = () => {
+        const newErrors: { email?: string; password?: string } = {};
+
+        if (!email) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(email)) {
+            newErrors.email = 'Please enter a valid email';
+        }
+
+        if (!password) {
+            newErrors.password = 'Password is required';
+        } else if (password.length < 6) {
+            newErrors.password = 'Password must be at least 6 characters';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleEmailLogin = async () => {
+        if (!validateForm()) return;
+
+        setLoading(true);
+        try {
+            const user = await signInWithEmail(email, password);
+            await fetchUserProfile(user.uid);
+            // Navigation will be handled by auth state listener
+        } catch (error: any) {
+            let message = 'An error occurred during sign in';
+            if (error.code === 'auth/user-not-found') {
+                message = 'No account found with this email';
+            } else if (error.code === 'auth/wrong-password') {
+                message = 'Incorrect password';
+            } else if (error.code === 'auth/invalid-email') {
+                message = 'Invalid email address';
+            } else if (error.code === 'auth/too-many-requests') {
+                message = 'Too many failed attempts. Please try again later';
+            }
+            Alert.alert('Sign In Failed', message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleGoogleLogin = async () => {
+        setGoogleLoading(true);
+        try {
+            const user = await signInWithGoogle();
+            await fetchUserProfile(user.uid);
+            // Navigation will be handled by auth state listener
+        } catch (error: any) {
+            console.error('Google Sign-In Error:', error);
+            if (error.code !== 'SIGN_IN_CANCELLED') {
+                Alert.alert(
+                    'Sign In Failed',
+                    'Unable to sign in with Google. Please try again.'
+                );
+            }
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                style={styles.keyboardView}
+            >
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                    >
+                        <ArrowLeft size={24} color={COLORS.text.primary} />
+                    </TouchableOpacity>
+
+                    <View style={styles.header}>
+                        <Text style={styles.logo}>घड़ी</Text>
+                        <Text style={styles.title}>Welcome Back</Text>
+                        <Text style={styles.subtitle}>
+                            Sign in to continue managing your time
+                        </Text>
+                    </View>
+
+                    <View style={styles.form}>
+                        <TextInput
+                            label="Email"
+                            placeholder="Enter your email"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            error={errors.email}
+                            leftIcon={<Mail size={20} color={COLORS.text.secondary} />}
+                        />
+
+                        <TextInput
+                            label="Password"
+                            placeholder="Enter your password"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            error={errors.password}
+                            leftIcon={<Lock size={20} color={COLORS.text.secondary} />}
+                        />
+
+                        <TouchableOpacity style={styles.forgotPassword}>
+                            <Text style={styles.forgotPasswordText}>
+                                Forgot Password?
+                            </Text>
+                        </TouchableOpacity>
+
+                        <Button
+                            title="Sign In"
+                            variant="primary"
+                            size="lg"
+                            fullWidth
+                            loading={loading}
+                            onPress={handleEmailLogin}
+                        />
+                    </View>
+
+                    <View style={styles.divider}>
+                        <View style={styles.dividerLine} />
+                        <Text style={styles.dividerText}>or continue with</Text>
+                        <View style={styles.dividerLine} />
+                    </View>
+
+                    <Button
+                        title="Continue with Google"
+                        variant="outline"
+                        size="lg"
+                        fullWidth
+                        loading={googleLoading}
+                        onPress={handleGoogleLogin}
+                        icon={
+                            <View style={styles.googleIcon}>
+                                <Text style={styles.googleIconText}>G</Text>
+                            </View>
+                        }
+                    />
+
+                    <View style={styles.footer}>
+                        <Text style={styles.footerText}>Don't have an account? </Text>
+                        <TouchableOpacity onPress={() => router.push('/signup')}>
+                            <Text style={styles.footerLink}>Sign Up</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
+    );
+}
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: COLORS.background,
+    },
+    keyboardView: {
+        flex: 1,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        padding: SPACING.lg,
+    },
+    backButton: {
+        width: 44,
+        height: 44,
+        borderRadius: BORDER_RADIUS.full,
+        backgroundColor: COLORS.surface,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: SPACING.lg,
+    },
+    header: {
+        marginBottom: SPACING.xl,
+    },
+    logo: {
+        fontSize: TYPOGRAPHY.size.xxl,
+        fontWeight: 'bold',
+        color: COLORS.primary,
+        marginBottom: SPACING.md,
+    },
+    title: {
+        fontSize: TYPOGRAPHY.size.xxl,
+        fontWeight: 'bold',
+        color: COLORS.text.primary,
+        marginBottom: SPACING.xs,
+    },
+    subtitle: {
+        fontSize: TYPOGRAPHY.size.md,
+        color: COLORS.text.secondary,
+    },
+    form: {
+        marginBottom: SPACING.lg,
+    },
+    forgotPassword: {
+        alignSelf: 'flex-end',
+        marginBottom: SPACING.lg,
+    },
+    forgotPasswordText: {
+        fontSize: TYPOGRAPHY.size.sm,
+        color: COLORS.primary,
+        fontWeight: '500',
+    },
+    divider: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: SPACING.lg,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+        backgroundColor: COLORS.border,
+    },
+    dividerText: {
+        fontSize: TYPOGRAPHY.size.sm,
+        color: COLORS.text.secondary,
+        marginHorizontal: SPACING.md,
+    },
+    googleIcon: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: COLORS.surface,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    googleIconText: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        color: COLORS.text.primary,
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: SPACING.xl,
+    },
+    footerText: {
+        fontSize: TYPOGRAPHY.size.md,
+        color: COLORS.text.secondary,
+    },
+    footerLink: {
+        fontSize: TYPOGRAPHY.size.md,
+        color: COLORS.primary,
+        fontWeight: '600',
+    },
+});

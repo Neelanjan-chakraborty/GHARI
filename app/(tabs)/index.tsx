@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { COLORS, SPACING, TYPOGRAPHY } from '../../src/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Sectograph from '../../src/components/sectograph/Sectograph';
+import { useAuthStore } from '../../src/store/useAuthStore';
 
 const DUMMY_TASKS = [
     { id: '1', title: 'Deep Work', startTime: '09:00', endTime: '12:00', color: COLORS.primary },
@@ -10,12 +11,23 @@ const DUMMY_TASKS = [
     { id: '4', title: 'Study', startTime: '20:00', endTime: '22:00', color: COLORS.status.error },
 ];
 
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
+}
+
 export default function HomeScreen() {
+    const { user, profile } = useAuthStore();
+    const displayName = profile?.name || user?.displayName || 'there';
+    const firstName = displayName.split(' ')[0];
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <View style={styles.header}>
-                    <Text style={styles.greeting}>Good Evening, Neel</Text>
+                    <Text style={styles.greeting}>{getGreeting()}, {firstName}</Text>
                     <Text style={styles.subtitle}>You have {DUMMY_TASKS.length} tasks scheduled for today</Text>
                 </View>
 
