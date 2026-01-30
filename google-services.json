@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "399403302252",
+    "project_id": "ghari-5b9bb",
+    "storage_bucket": "ghari-5b9bb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:399403302252:android:1832486fca8058f8e6c749",
+        "android_client_info": {
+          "package_name": "com.azurerift.ghari"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuAUOWo-ZvyowiSf1Uh2X2YBOrKQSX5HI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
